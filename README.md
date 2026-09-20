@@ -93,6 +93,12 @@ curl -X POST localhost:8080/orders/agent \
 
 Requires Java 21+ (Spring AI 2.0 requires Spring Boot 4 / Framework 7).
 
+One-time, optional: `git config core.hooksPath .githooks` enables a
+pre-commit nudge (not a gate — `git commit --no-verify` skips it) that
+flags a commit touching `service/agent`, `service/governance`, or
+`service/tool` with no accompanying doc change. See
+[`docs/adr/`](docs/adr/) and [`docs/llm-notes/`](docs/llm-notes/).
+
 ---
 
 ## The five things worth looking at

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Nudges (does not block) a commit that touches the guardrail-relevant
+# packages — service/agent, service/governance, service/tool — without
+# also touching a doc: docs/, an ADR, an LLM note, or Javadoc in the
+# changed file itself. See docs/adr/README.md and docs/llm-notes/README.md.
+#
+# This is deliberately a plain git hook, not a Claude Code hook — it has
+# nothing to do with the two PostToolUse hooks in .claude/settings.json
+# (Phase 8 of CLAUDE.md), which format and test on edit. This one only
+# runs at commit time and only ever warns; use `git commit --no-verify`
+# to skip it for a commit that genuinely doesn't need a doc touch.
+
+changed=$(git diff --cached --name-only --diff-filter=ACM)
+
+touches_guardrail_code=$(echo "$changed" | grep -E '^src/main/java/com/example/orderagent/service/(agent|governance|tool)/.*\.java$')
+touches_docs=$(echo "$changed" | grep -E '^docs/|^src/main/resources/prompts/')
+
+if [ -n "$touches_guardrail_code" ] && [ -z "$touches_docs" ]; then
+    echo ""
+    echo "⚠  This commit touches guardrail code but no docs/ file:"
+    echo "$touches_guardrail_code" | sed 's/^/    /'
+    echo ""
+    echo "   If the Javadoc in those files already covers the change, that's"
+    echo "   fine — this is a nudge, not a gate. Otherwise consider a note in"
+    echo "   docs/llm-notes/ (a model-behavior surprise) or docs/adr/ (a real"
+    echo "   design decision with a rejected alternative)."
+    echo ""
+    echo "   Skip this check for this commit: git commit --no-verify"
+    echo ""
+fi
+
+exit 0
